@@ -1,6 +1,7 @@
- config.json
- *.log.txt
- *.log.txt.*
+# Deployment specific files or outputs
+config.json
+*.log.txt
+*.log.txt.*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
