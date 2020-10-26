@@ -5,13 +5,13 @@ import time
 import json
 import subprocess
 import logging
+import regex as re
 from logging import handlers
 from steam.client import SteamClient
 
 configfilename = 'config.json'
 logfile = 'steam-update-wrapper.log.txt'
-lastupdatecheck = -1
-
+lastupdatecheck = 0
 
 # Configure logging to file and stream
 def initlogs():
@@ -44,20 +44,49 @@ def loadconfig(filename):
         config = json.load(config_file)
         return config
 
-def getlatestbuildtime(appid, buildname):
-    """Get the last updated timestamp for the given appid and build name"""
-    client = SteamClient()
+def getlatestbuildtime(appid, branch):
+    """Get the last updated timestamp for the given appid and build
+    name in seconds from the epoch"""
+    try:
 
-    client.anonymous_login()
+        client = SteamClient()
 
-    result = client.get_product_info(apps=[appid])
+        client.anonymous_login()
 
-    buildid = result['apps'][appid]['depots']['branches']['buildname']['buildid']
-    timeupdated = result['apps'][appid]['depots']['branches']['buildname']['timeupdated']
+        result = client.get_product_info(apps=[appid])
 
-    client.logout()
+        buildid = result['apps'][appid]['depots']['branches'][branch]['buildid']
+        timeupdated = int(result['apps'][appid]['depots']['branches'][branch]['timeupdated'])
 
-    return timeupdated
+        client.logout()
+
+        logger.info(f'Last update time for appid {appid} on branch {branch} identified as {time.ctime(timeupdated)}.')
+
+        return timeupdated
+    except:
+        logger.error(f'There was an issue fetching the latest build information from Steam for appid {appid} on branch {branch}.  Defaulting last updated time to epoch.')
+        return 0
+
+def parsebranch(extraflags):
+    # If it's exactly -beta, return "beta", otherwise use regex.  If no match, return public.
+    if extraflags.endswith('-beta'):
+        return 'beta'
+
+    pattern = r"-beta +(?P<branch>[a-zA-Z0-9_]*)? ?[\-+]?"
+
+    match = re.match(pattern, extraflags)
+
+    if match is not None:
+        branch = match.group('branch')
+        if branch == '':
+            branch = 'beta'
+        return branch
+
+    return 'public'
+
+def updategame(steamcmd, installdir, appid, extraflags):
+
+    print('updating game')
 
 def startgameprocess():
     print('starting game')
@@ -65,11 +94,7 @@ def startgameprocess():
 def stopgameprocess():
     print('stopping game')
 
-def updategame():
-    print('updating game')
 
-def parsebranch(extraflags):
-    return 'public'
 
 def main():
     initlogs()
@@ -101,13 +126,16 @@ def main():
     if len(sys.argv) > 1:
          gamecommand = sys.argv[1:]
 
-    logger.info(f'Game will be executed as: {gamecommand}')
+    logger.info(f'Game will be executed as: {" ".join(gamecommand)}')
 
-    # Save arguments as process to run
-    # Get branch from steamcmdextras
     # Store last checked time
+    lastupdatecheck = time.time()
+    logger.info(f'Saved last checked time as {time.ctime(lastupdatecheck)}.  Attempting initial game update.')
+
     # Update game
     # Launch game
+    #logger.info(f"Scheduling update process to run every {checkinterval} minutes")
+    #time.sleep(checkinterval * 60)
     # While true
     # Check for update vs last checked time
     # if update
@@ -118,7 +146,8 @@ def main():
     # Sleep for checkinterval
 
 
-    logger.info(f"Scheduling update process to run every {checkinterval} minutes")
+
+    #
 
 
 if __name__ == "__main__":
