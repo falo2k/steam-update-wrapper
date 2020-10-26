@@ -1,5 +1,5 @@
 import sys
-#from os import path
+import os
 import os.path
 import time
 import json
@@ -108,7 +108,11 @@ def startgameprocess(commandline):
         raise
 
 def stopgameprocess(process):
-    print('stopping game')
+    logger.info(f'Sending SIGTERM to {process.pid}')
+    process.terminate()
+    logger.info(f'Waiting for process {process.pid} to terminate')
+    process.wait()
+    logger.info(f'Process terminated.  Hasta la vista baby.')
 
 def main():
     initlogs()
@@ -153,27 +157,41 @@ def main():
     logger.info(f'Saved last checked time as {time.ctime(lastupdatecheck)}.  Attempting initial game update.')
 
     # Update the game for first run
-    #updategame(steamcmd, installdir, appid, steamcmdextras)
+    updategame(steamcmd, installdir, appid, steamcmdextras)
 
     logger.info(f'Game updated.  Starting game using {" ".join(gamecommand)}.')
     gameprocess = startgameprocess(gamecommand)
 
-    logger.info(f'Sleeping for 10s')
-    time.sleep(10)
-    stopgameprocess(gameprocess)
+    # testlife = 15
+    # logger.info(f'Sleeping for {testlife}s')
+    # time.sleep(testlife)
+    # stopgameprocess(gameprocess)
 
-    # Launch game
-    #logger.info(f"Scheduling update process to run every {checkinterval} minutes")
-    #time.sleep(checkinterval * 60)
-    # While true
-    # Check for update vs last checked time
-    # if update
-    #   Kill game
-    #   Update game
-    #   Update last updated to steamcmd time
-    #   Re-Launch game
-    # Sleep for checkinterval
+    logger.info(f"Scheduling update process to run at {checkinterval} minute intervals")
+    time.sleep(checkinterval * 60)
+    while True:
+        updatetime = time.time()
+        logger.info(f'Running update check at {time.ctime(updatetime)} - Last Check/Update At {time.ctime(lastupdatecheck)}')
+        latestbuildtime = getlatestbuildtime(appid, branch)
 
+        if lastupdatecheck < latestbuildtime:
+            logger.info(f'Latest build time of {time.ctime(latestbuildtime)} is after last check.  Update needed.  Stopping server.')
+            stopgameprocess(gameprocess)
+            logger.info(f'Updating game using steamcmd.')
+            updategame(steamcmd, installdir, appid, steamcmdextras)
+            logger.info(f'Game updated.  Starting game using {" ".join(gamecommand)}.')
+            gameprocess = startgameprocess(gamecommand)
+            lastupdatecheck = latestbuildtime
+        else:
+            logger.info(f'Latest build time of {time.ctime(latestbuildtime)} is before last check.  No update needed.  Checking game process ({gameprocess.pid}) is still running')
+            lastupdatecheck = updatetime
+            gameprocess.poll()
+
+            if gameprocess.returncode is not None:
+                logger.warning(f'Game process has exited since last check.  Restarting game using {" ".join(gamecommand)}.')
+                gameprocess = startgameprocess(gamecommand)
+
+        time.sleep(checkinterval * 60)
 
 
 if __name__ == "__main__":
