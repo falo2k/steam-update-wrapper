@@ -1,0 +1,25 @@
+{
+	"checkinterval" : 5,
+	"restartinterval" : 0.25,
+	"reinstalltimeout" : 1,
+	"pterodactyl" : {
+		"apikey" : "PTERODACTYLCLIENTAPIKEY",
+		"host" : "https://domain.or.ip"
+	},
+	"steamapps" : {
+		"Holdfast Dedicated Server - Normal" : {
+			"appid" : 1424230,
+			"branch" : "public",
+			"servers" : [
+				"1837e53c-359a-4934-bd70-ca3dda646c35",
+				"28b61b64-ffea-45e3-afaf-580709f3d2b9"]
+		},
+		"Holdfast Dedicated Server - Beta" : {
+			"appid" : 1424230,
+			"branch" : "beta",
+			"servers" : [
+				"28b61b64-ffea-45e3-afaf-580709f3d2b9",
+				"d2ff6880-92f4-42dd-bef5-2c80f0a8cf28"]
+		}
+	}
+}
