@@ -39,7 +39,7 @@ def loadconfig(filename):
 
     # Load the configuration file from config.json
     logger.info(f"Reading configuration file {filename}")
-    with open('config.json') as config_file:
+    with open(filename) as config_file:
         config = json.load(config_file)
         return config
 
@@ -124,6 +124,7 @@ def main():
     if len(sys.argv) > 2:
          gamecommand = sys.argv[2:]
 
+    global configfilename
     configfilename = 'config.json'
     if len(sys.argv) > 1:
         configfilename = sys.argv[1]
