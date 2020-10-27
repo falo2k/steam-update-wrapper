@@ -9,7 +9,6 @@ import regex as re
 from logging import handlers
 from steam.client import SteamClient
 
-configfilename = 'config.json'
 logfile = 'steam-update-wrapper.log.txt'
 lastupdatecheck = 0
 
@@ -115,6 +114,20 @@ def stopgameprocess(process):
     logger.info(f'Process terminated.  Hasta la vista baby.')
 
 def main():
+    # Parse the command line arguments
+    global gamecommand
+    # Testing gamecommand to run indefinitely
+    gamecommand = ['ping', '-t', 'www.google.com'] if sys.platform.startswith('win32') else ['ping', 'www.google.com']
+
+    # Load the command line arguments as the game executable
+    # TODO need to handle nothing being passed here
+    if len(sys.argv) > 2:
+         gamecommand = sys.argv[2:]
+
+    configfilename = 'config.json'
+    if len(sys.argv) > 1:
+        configfilename = sys.argv[1]
+
     initlogs()
     global configdata
     configdata = loadconfig(configfilename)
@@ -143,14 +156,6 @@ def main():
         installdir = '.'
 
     checkinterval = configdata.get('checkinterval', 10)
-
-    global gamecommand
-    gamecommand = ['ping', '-t', 'www.google.com'] if sys.platform.startswith('win32') else ['ping', 'www.google.com']
-
-    # Load the command line arguments as the game executable
-    # TODO need to handle nothing being passed here
-    if len(sys.argv) > 1:
-         gamecommand = sys.argv[1:]
 
     # Store last checked time
     lastupdatecheck = time.time()
