@@ -85,7 +85,10 @@ def parsebranch(extraflags):
 
 def updategame(steamcmd, installdir, appid, extraflags):
     try:
-        fullsteamcmd = f'{steamcmd} +login anonymous +force_install_dir {installdir} +app_update {appid} {extraflags} +quit'
+        if extraflags.strip() == '':
+            fullsteamcmd = [steamcmd, '+login', 'anonymous', '+force_install_dir', installdir, '+app_update', str(appid), '+quit']
+        else:
+            fullsteamcmd = [steamcmd, '+login', 'anonymous', '+force_install_dir', installdir, '+app_update', str(appid)] + extraflags.split() + ['+quit']
         logger.info(f'Calling: {fullsteamcmd}')
         process = subprocess.run(fullsteamcmd)
         if process.returncode == 0:
